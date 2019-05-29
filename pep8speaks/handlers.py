@@ -45,7 +45,7 @@ def handle_pull_request(request):
 
     # Simply do not comment no-error messages when a PR is opened
     if not ERROR:
-        if ghrequest.action == "opened":
+        if ghrequest.action == "opened" and not config['comment_no_error_when_pr_opened']:
             return utils.Response(ghrequest)
         elif ghrequest.action in ("reopened", "synchronize"):
             ONLY_UPDATE_COMMENT_BUT_NOT_CREATE = True
