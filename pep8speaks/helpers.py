@@ -6,6 +6,7 @@ import datetime
 import json
 import logging
 import os
+import sys
 from pathlib import Path
 import re
 import subprocess
@@ -14,6 +15,14 @@ import time
 import unidiff
 import yaml
 from pep8speaks import utils
+
+try:
+    from guesslang import Guess
+    import tensorflow as tf
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+    tf.logging.set_verbosity(tf.logging.ERROR)
+except ModuleNotFoundError:
+    pass
 
 
 def update_users(repository):
@@ -177,11 +186,14 @@ def get_files_involved_in_pr(repo, pr_number):
 
     for patchset in patch:
         diff_file = patchset.target_file[1:]
-        files[diff_file] = []
+        files[diff_file] = {
+            'line_no': [],
+            'patchset': patchset,
+        }
         for hunk in patchset:
             for line in hunk.target_lines():
                 if line.is_added:
-                    files[diff_file].append(line.target_line_no)
+                    files[diff_file]['line_no'].append(line.target_line_no)
     return files
 
 
@@ -190,10 +202,25 @@ def get_py_files_in_pr(repo, pr_number, exclude=None):
         exclude = []
     files = get_files_involved_in_pr(repo, pr_number)
     for diff_file in list(files.keys()):
-        if diff_file[-3:] != ".py" or utils.filename_match(diff_file, exclude):
+        if not looks_like_python(files[diff_file]['patchset']) or utils.filename_match(diff_file, exclude):
             del files[diff_file]
+        else:
+            files[diff_file] = files[diff_file]['line_no']
 
     return files
+
+
+def looks_like_python(patchset):
+    target_file = patchset.target_file[1:]
+    if target_file[-3:] == '.py':
+        return True
+    elif '.' in target_file:
+        return False
+    elif 'guesslang' in sys.modules:
+        guessed = Guess().language_name(str(patchset))
+        return guessed == 'Python'
+    else:
+        return False
 
 
 def check_pythonic_pr(repo, pr_number):
@@ -231,7 +258,7 @@ def run_pycodestyle(ghrequest, config):
             cmd = f'flake8 {config["flake8_cmd_config"]} file_to_check.py'
         else:
             cmd = f'pycodestyle {config["pycodestyle_cmd_config"]} file_to_check.py'
-        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, env=env_subpress())
         stdout, _ = proc.communicate()
         ghrequest.extra_results[filename] = stdout.decode(r.encoding).splitlines()
 
@@ -426,7 +453,7 @@ def autopep8(ghrequest, config):
     py_files = {}
 
     for patchset in patch:
-        if patchset.target_file[-3:] == '.py':
+        if looks_like_python(patchset):
             py_file = patchset.target_file[1:]
             py_files[py_file] = []
             for hunk in patchset:
@@ -448,7 +475,7 @@ def autopep8(ghrequest, config):
             file_to_fix.write(r.text)
 
         cmd = f'autopep8 file_to_fix.py --diff {arg_to_ignore}'
-        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, env=env_subpress())
         stdout, _ = proc.communicate()
         ghrequest.diff[filename] = stdout.decode(r.encoding)
 
@@ -562,7 +589,7 @@ def autopep8ify(ghrequest, config):
     py_files = {}
 
     for patchset in patch:
-        if patchset.target_file[-3:] == '.py':
+        if looks_like_python(patchset):
             py_file = patchset.target_file[1:]
             py_files[py_file] = []
             for hunk in patchset:
@@ -584,7 +611,7 @@ def autopep8ify(ghrequest, config):
             file_to_fix.write(r.text)
 
         cmd = f'autopep8 file_to_fix.py {arg_to_ignore}'
-        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, env=env_subpress())
         stdout, _ = proc.communicate()
         ghrequest.results[filename] = stdout.decode(r.encoding)
 
@@ -624,3 +651,13 @@ def create_pr(ghrequest):
         ghrequest.pr_url = r.json()["html_url"]
     else:
         ghrequest.error = "Pull request could not be created"
+
+
+def env_subpress():
+    # return None
+    if 'LD_LIBRARY_PATH' in os.environ:
+        env = os.environ.copy()
+        del env['LD_LIBRARY_PATH']
+        return env
+    else:
+        return None
