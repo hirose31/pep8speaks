@@ -141,6 +141,8 @@ def _create_diff(ghrequest, config):
 
     # Create the gist
     helpers.create_gist(ghrequest)
+    if not ghrequest.gist_url:
+        return utils.Response(ghrequest)
 
     comment = (
         f"Here you go with [the gist]({ghrequest.gist_url}) !\n\n"

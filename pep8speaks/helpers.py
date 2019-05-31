@@ -475,6 +475,10 @@ def create_gist(ghrequest):
                 "content": diffs
             }
 
+    if not request_json["files"]:
+        ghrequest.gist_url = ''
+        return
+
     # Call github api to create the gist
     query = "/gists"
     response = utils.query_request(query, method='POST', json=request_json).json()
