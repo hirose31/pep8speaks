@@ -84,6 +84,11 @@ class GHRequest(object):
         self.base_branch = self.pull_request['base']['ref']
         self.after_commit_hash = self.pull_request['head']['sha']
         self.private = self.pull_request['base']['repo']['private']
+        if self.pull_request['head']['user']['login'] == 'pep8speaks':
+            self.pr_pep8ify = True
+        else:
+            self.pr_pep8ify = False
+        self.reviewer = ''
 
     def _set_conditionals(self, request, event):
         """
