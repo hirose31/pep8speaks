@@ -593,9 +593,14 @@ def autopep8ify(ghrequest, config):
     # A dictionary with filename paired with list of new line numbers
     py_files = {}
 
+    linter = config["scanner"]["linter"]
+    files_to_exclude = config[linter]["exclude"]
+
     for patchset in patch:
         if looks_like_python(patchset):
             py_file = patchset.target_file[1:]
+            if utils.filename_match(py_file, files_to_exclude):
+                continue
             py_files[py_file] = []
             for hunk in patchset:
                 for line in hunk.target_lines():
