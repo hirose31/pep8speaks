@@ -644,6 +644,14 @@ def commit(ghrequest):
 
 
 def create_pr(ghrequest):
+    r = utils.query_request(
+        f'/repos/{ghrequest.target_repo_fullname}/compare/{ghrequest.target_repo_branch}...pep8speaks:{ghrequest.new_branch}',
+        headers={'Accept': 'application/vnd.github.v3.diff'},
+    )
+    if r.headers['content-length'] == '0':
+        # no diff
+        return False
+
     query = f"/repos/{ghrequest.target_repo_fullname}/pulls"
     request_json = {
         "title": "Fix PEP 8 errors",
@@ -656,6 +664,8 @@ def create_pr(ghrequest):
         ghrequest.pr_url = r.json()["html_url"]
     else:
         ghrequest.error = "Pull request could not be created"
+
+    return True
 
 
 def env_subpress():
