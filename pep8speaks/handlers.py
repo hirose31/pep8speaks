@@ -64,7 +64,6 @@ def handle_pull_request(request):
     if ERROR and config['create_pr_automatically'] and not ghrequest.pr_pep8ify:
         _pep8ify(ghrequest, config)
 
-
     return utils.Response(ghrequest)
 
 
@@ -120,7 +119,9 @@ def _pep8ify(ghrequest, config):
     # Commit each change onto the branch
     helpers.commit(ghrequest)
     # Create a PR from the branch to the target repository
-    helpers.create_pr(ghrequest)
+    created = helpers.create_pr(ghrequest)
+    if not created:
+        return utils.Response(ghrequest)
 
     comment = (
         f"Here you go with [the Pull Request]({ghrequest.pr_url}) ! The fixes are "
