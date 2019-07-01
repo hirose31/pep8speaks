@@ -524,6 +524,8 @@ def delete_if_forked(ghrequest):
                 FORKED = True
                 url = f"/repos/{repo['full_name']}"
                 utils.query_request(url, method='DELETE')
+    if FORKED:
+        time.sleep(3)
     return FORKED
 
 
