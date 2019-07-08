@@ -30,10 +30,10 @@ def query_request(query=None, method="GET", **kwargs):
 
     s = requests.Session()
     retries = Retry(
-        total=3,
-        connect=3,
-        read=3,
-        backoff_factor=1.0,
+        total=8,
+        connect=8,
+        read=8,
+        backoff_factor=2.0,
         method_whitelist=frozenset(['GET', 'POST']),
         status_forcelist=(500, 502, 503, 504, 409, 422),
     )

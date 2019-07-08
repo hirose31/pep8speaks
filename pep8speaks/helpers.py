@@ -525,7 +525,7 @@ def delete_if_forked(ghrequest):
                 url = f"/repos/{repo['full_name']}"
                 utils.query_request(url, method='DELETE')
     if FORKED:
-        time.sleep(3)
+        time.sleep(8)
     return FORKED
 
 
@@ -535,6 +535,7 @@ def fork_for_pr(ghrequest):
 
     if r.status_code == 202:
         ghrequest.fork_fullname = r.json()["full_name"]
+        time.sleep(8)
         return True
 
     ghrequest.error = "Unable to fork"
