@@ -571,7 +571,7 @@ def create_new_branch(ghrequest):
     sha = None
     r = utils.query_request(query)
     for ref in r.json():
-        if ref["ref"].split("/")[-1] == ghrequest.target_repo_branch:
+        if '/'.join(ref["ref"].split("/")[2:]) == ghrequest.target_repo_branch:
             sha = ref["object"]["sha"]
 
     query = f"/repos/{ghrequest.fork_fullname}/git/refs"
