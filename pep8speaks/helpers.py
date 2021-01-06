@@ -21,7 +21,7 @@ try:
     from guesslang import Guess
     import tensorflow as tf
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-    tf.logging.set_verbosity(tf.logging.ERROR)
+    tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 except ModuleNotFoundError:
     pass
 
