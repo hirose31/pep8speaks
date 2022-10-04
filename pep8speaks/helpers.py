@@ -266,9 +266,9 @@ def run_pycodestyle(ghrequest, config):
         # Put only relevant errors in the ghrequest.results dictionary
         ghrequest.results[filename] = []
         for error in list(ghrequest.extra_results[filename]):
-            relevant_error_pattern = r"^file_to_check.py:\d+:\d+:\s[WEF]\d+\s.*"
+            relevant_error_pattern = r"^file_to_check.py:\d+:\d+:\s[WEFIT]\d+\s.*"
             # Other error codes are B C D T
-            if re.search(relevant_error_pattern, error):
+            if re.search(relevant_error_pattern, error) and 'T499' not in error:
                 ghrequest.results[filename].append(error.replace("file_to_check.py", filename))
                 ghrequest.extra_results[filename].remove(error)
 
