@@ -74,7 +74,7 @@ def read_setup_cfg_file(setup_config_file):
         except KeyError:
             pass
 
-    list_keys = ["ignore", "exclude", "filename", "select"]
+    list_keys = ["ignore", "exclude", "filename", "select", "enable-extensions"]
     for key in list_keys:
         try:
             value = setup_config_section[key]
