@@ -3,3 +3,4 @@ guesslang==2.0.1
 tensorflow==2.2.0
 flake8-isort==4.2.0
 flake8-mypy==17.8.0
+numpy==1.23.5
